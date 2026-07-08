@@ -1,0 +1,106 @@
+import sys
+import random
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QMenu, QAction, QInputDialog
+from PyQt5.QtCore import Qt, QTimer, QPoint
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QFont
+
+class DesktopPet(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+        self.hunger = 50
+        self.happiness = 50
+        self.age = 0  # 分钟
+        
+        # 定时器：每秒更新状态
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.updateLife)
+        self.timer.start(1000)
+
+    def initUI(self):
+        # 无边框、透明背景、置顶
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        
+        # 创建一个标签显示文字或图片
+        self.label = QLabel('🐣', self)
+        self.label.setFont(QFont('Segoe UI Emoji', 50))
+        self.label.setAlignment(Qt.AlignCenter)
+        self.label.resize(100, 100)
+        
+        # 设置窗口大小为100x100并移动到屏幕左上角
+        self.setGeometry(0, 50, 100, 100)
+        self.show()
+        
+        # 支持拖拽
+        self.dragPos = None
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.dragPos = event.globalPos()
+            # 鼠标点击增加快乐值
+            self.happiness = min(100, self.happiness + 10)
+        elif event.button() == Qt.RightButton:
+            self.showContextMenu()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton and self.dragPos:
+            self.move(self.pos() + event.globalPos() - self.dragPos)
+            self.dragPos = event.globalPos()
+            event.accept()
+
+    def showContextMenu(self):
+        menu = QMenu(self)
+        feed_action = QAction('喂食', self)
+        talk_action = QAction('聊天', self)
+        feed_action.triggered.connect(self.feed)
+        talk_action.triggered.connect(self.chat)
+        menu.addAction(feed_action)
+        menu.addAction(talk_action)
+        menu.exec_(self.mapToGlobal(self.rect().topLeft()))
+
+    def feed(self):
+        self.hunger = max(0, self.hunger - 30)
+        self.happiness = min(100, self.happiness + 5)
+        self.updateAppearance()
+
+    def chat(self):
+        # 标准AI对话（需替换为你的API调用）
+        user_input, ok = QInputDialog.getText(self, 'AI对话', '说点什么：')
+        if ok:
+            # 这里可以改成调用OpenAI API
+            response = f"（AI回应：我饿了，饥饿值{self.hunger}）"
+            print(f"用户说: {user_input}, AI: {response}")
+
+    def updateLife(self):
+        self.age += 1
+        # 饥饿随时间增加
+        self.hunger = min(100, self.hunger + 1)
+        # 无聊减少快乐
+        self.happiness = max(0, self.happiness - 0.5)
+        # 随机事件
+        if random.random() < 0.01:
+            print("生命体打了个哈欠...")
+        self.updateAppearance()
+
+    def updateAppearance(self):
+        # 根据年龄/状态改变显示
+        if self.age > 10:
+            if self.hunger > 70:
+                self.label.setText('🐥🍔')  # 饿的样子
+            elif self.happiness > 70:
+                self.label.setText('🐥💖')  # 开心的样子
+            else:
+                self.label.setText('🐤')
+        else:
+            self.label.setText('🪺')  # 蛋
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillRect(self.rect(), QColor(0, 0, 0, 0))  # 透明背景
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    pet = DesktopPet()
+    sys.exit(app.exec_())
