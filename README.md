@@ -112,10 +112,12 @@ python app.py
 - DeepSeek API (AI对话)
 - BeautifulSoup4 (网页解析)
 
-## 团队成员
-25智创何思思
+##注意实事项
 
 - 需要配置 DeepSeek API Key 才能使用 AI 对话功能
 - 摄像头功能需要 OpenCV 和可用的摄像头设备
 - 养成系统数据会自动保存到 nurture.json
 - 对话历史会自动保存到 memory.json
+
+## 团队成员
+25智创何思思
